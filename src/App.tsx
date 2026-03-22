@@ -12,10 +12,10 @@ import RegisterPage from "./pages/auth/register";
 import LoginPage from "./pages/auth/login";
 import VerifyEmail from "./pages/auth/verify";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
-import MyTaskPage from "./pages/dashboard/myTasks";
-import Task from "./pages/dashboard/task";
-import UpdateTaskPage from "./pages/dashboard/updateTask";
-import CreateTaskPage from "./pages/dashboard/create";
+import MyShopsPage from "./pages/dashboard/shops/myShops";
+import CreateShopPage from "./pages/dashboard/shops/createShop";
+import ShopPage from "./pages/dashboard/shops/shop";
+import EditShopPage from "./pages/dashboard/shops/editShop";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,11 +32,11 @@ const router = createBrowserRouter(
       </Route>
 
       <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<MyTaskPage />} />
-        <Route path="my-tasks" element={<MyTaskPage />} />
-        <Route path="create" element={<CreateTaskPage />} />
-        <Route path=":id" element={<Task />} />
-        <Route path=":id/update" element={<UpdateTaskPage />} />
+        <Route index element={<MyShopsPage />} />
+        <Route path="shops" element={<MyShopsPage />} />
+        <Route path="shops/create" element={<CreateShopPage />} />
+        <Route path="shops/:id" element={<ShopPage />} />
+        <Route path="shops/:id/edit" element={<EditShopPage />} />
       </Route>
     </>,
   ),

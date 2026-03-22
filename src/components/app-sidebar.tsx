@@ -49,17 +49,17 @@ const data = {
   navMain: [
     {
       title: "Shops",
-      url: "#",
+      url: "/dashboard/shops",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
           title: "Create",
-          url: "#",
+          url: "/dashboard/shops/create",
         },
         {
           title: "My Shops",
-          url: "#",
+          url: "/dashboard/shops",
         },
       ],
     },
