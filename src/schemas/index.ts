@@ -28,44 +28,31 @@ export const loginSchema = z.object({
     .max(16, "Password cannot be more than 16 characters"),
 });
 
-export const taskCreateSchema = z.object({
+export const shopCreateSchema = z.object({
   name: z
     .string()
-    .min(3, "Task name must be at least 3 characters")
-    .max(50, "Task name cannot be more than 50 characters"),
+    .min(3, "Shop name must be at least 3 characters")
+    .max(150, "Shop name cannot be more than 150 characters"),
   description: z
     .string()
-    .min(5, "Task description must be at least 5 characters.")
-    .max(300, "Task description cannot be more than 300 characters"),
-  priority: z.enum(["low", "medium", "high"]),
-  status: z.enum(["todo", "in_progress", "done"]),
+    .min(10, "Shop description must be at least 10 characters")
+    .max(300, "Shop description cannot be more than 300 characters"),
+  location: z
+    .string()
+    .min(3, "Location must be at least 3 characters")
+    .max(100, "Location cannot be more than 100 characters"),
+  email: z.email("Invalid email address"),
+  phone: z
+    .string()
+    .regex(/^[0-9+\-\s()]{7,15}$/, "Phone number must be valid (7-15 characters)"),
 });
 
-export const taskSchema = z.object({
+export const shopSchema = z.object({
   id: z.string(),
-  name: z
-    .string()
-    .min(3, "Task name must be at least 3 characters")
-    .max(50, "Task name cannot be more than 50 characters"),
-  description: z
-    .string()
-    .min(5, "Task description must be at least 5 characters.")
-    .max(300, "Task description cannot be more than 300 characters"),
-  priority: z.enum(["low", "medium", "high"]),
-  status: z.enum(["todo", "in_progress", "done"]),
+  name: z.string(),
+  description: z.string(),
+  location: z.string(),
+  email: z.string(),
+  phone: z.string(),
   createdAt: z.date(),
-});
-
-export const taskUpdateSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Task name must be at least 3 characters")
-    .max(50, "Task name cannot be more than 50 characters")
-    .optional(),
-   description: z
-    .string()
-    .min(5, "Task description must be at least 5 characters.")
-    .max(300, "Task description cannot be more than 300 characters").optional(),
-  priority: z.enum(["low", "medium", "high"]).optional(),
-  status: z.enum(["todo", "in_progress", "done"]).optional(),
 });

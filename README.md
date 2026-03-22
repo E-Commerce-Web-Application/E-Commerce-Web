@@ -1,73 +1,84 @@
-# React + TypeScript + Vite
+# Frontend Setup (Microservices Project)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This README contains setup instructions only for the frontend app in this microservices project.
 
-Currently, two official plugins are available:
+## Services Used by Frontend
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Shop Service
+- Product Service
+- Review Service
+- Cart Service
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 20+
+- npm 10+
+- All required backend services running and reachable
 
-## Expanding the ESLint configuration
+## 1) Clone and move to frontend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd web
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 2) Install dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm install
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 3) Configure environment
+
+Create a local env file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Update `.env`:
+
+```env
+VITE_SERVER=http://localhost:<PORT>
+```
+
+`VITE_SERVER` must point to the API base URL used by the frontend (gateway or backend host) that exposes routes for:
+
+- `/shops`
+- `/products`
+- `/reviews`
+- `/cart`
+
+## 4) Start required backend services
+
+Before running the frontend, start these services:
+
+1. Shop Service
+2. Product Service
+3. Review Service
+4. Cart Service
+
+Run each service using its own README/setup steps and ensure they are healthy.
+
+## 5) Run frontend in development
+
+```bash
+npm run dev
+```
+
+Frontend runs at:
+
+```text
+http://localhost:5173
+```
+
+## 6) Build for production
+
+```bash
+npm run build
+```
+
+## 7) Preview production build
+
+```bash
+npm run preview
 ```
