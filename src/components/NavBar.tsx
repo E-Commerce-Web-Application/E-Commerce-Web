@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { Button } from "./ui/button";
-import { useUserStore } from "@/stores/user.store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sheet,
@@ -9,12 +8,26 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useUser, UserButton } from "@clerk/react";
+import { useQuery } from "@tanstack/react-query";
+import { getCartByUserId } from "@/lib/api";
 
 export default function NavBar() {
-  const { user } = useUserStore();
+  const { user, isSignedIn } = useUser();
   const isMobile = useIsMobile();
+
+  const cartQuery = useQuery({
+    queryKey: ["cart-count", user?.id],
+    queryFn: async () => getCartByUserId(user!.id),
+    enabled: !!user?.id,
+  });
+
+  const cartItemsCount = (cartQuery.data?.items ?? []).reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   const Logo = () => (
     <div className="flex justify-start items-center">
@@ -30,25 +43,44 @@ export default function NavBar() {
       <Link className="text-sm text-muted-foreground" to="/">
         Home
       </Link>
-      {user && (
+      {isSignedIn && (
         <Link className="text-sm text-muted-foreground" to="/dashboard">
           Dashboard
         </Link>
       )}
+      <Link className="text-sm text-muted-foreground" to="/cart">
+        Cart
+      </Link>
     </>
   );
 
   const AuthButtons = () => (
     <>
-      <Link
-        to="/auth/login"
-        className="text-xs font-semibold text-black cursor-pointer"
-      >
-        LOG IN
-      </Link>
-      <Button variant="default" size="sm" className="text-xs bg-[#f87941]">
-        <Link to="/auth/register">GET STARTED</Link>
-      </Button>
+      {isSignedIn ? (
+        <div className="flex items-center gap-3">
+          <Link to="/cart" className="relative">
+            <ShoppingCart className="w-5 h-5 text-black" />
+            {cartItemsCount > 0 ? (
+              <span className="absolute -top-2 -right-2 text-[10px] w-4 h-4 rounded-full bg-[#f87941] text-white flex items-center justify-center">
+                {cartItemsCount}
+              </span>
+            ) : null}
+          </Link>
+          <UserButton />
+        </div>
+      ) : (
+        <>
+          <Link
+            to="/auth/login"
+            className="text-xs font-semibold text-black cursor-pointer"
+          >
+            LOG IN
+          </Link>
+          <Button variant="default" size="sm" className="text-xs bg-[#f87941]">
+            <Link to="/auth/register">GET STARTED</Link>
+          </Button>
+        </>
+      )}
     </>
   );
 

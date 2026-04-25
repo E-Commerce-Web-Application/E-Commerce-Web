@@ -6,15 +6,17 @@ import z from "zod";
 import { shopCreateSchema } from "@/schemas";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import axiosInstance from "@/providers/axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/react";
+import { createShop } from "@/lib/api";
+import { toOwnerId } from "@/lib/owner-id";
+import axios from "axios";
 
 export default function CreateShopPage() {
-  const { user, isLoaded } = useUser()
+  const { user, isLoaded } = useUser();
   const navigate = useNavigate();
   const {
     register,
@@ -25,7 +27,7 @@ export default function CreateShopPage() {
     resolver: zodResolver(shopCreateSchema),
     mode: "onChange",
     defaultValues: {
-      owner_id: isLoaded ? user?.id : "",
+      owner_id: "",
       name: "",
       description: "",
       location: "",
@@ -35,10 +37,7 @@ export default function CreateShopPage() {
   });
 
   const shopMutation = useMutation({
-    mutationFn: async (data) => {
-      const res = await axiosInstance.post("/shops/", data);
-      return res;
-    },
+    mutationFn: createShop,
     onSuccess: () => {
       reset();
       toast.success("Shop created successfully!");
@@ -46,13 +45,30 @@ export default function CreateShopPage() {
     },
     onError: (error) => {
       reset();
-      toast.error("Error creating shop: " + error.message);
+      const detail =
+        axios.isAxiosError(error) &&
+        typeof error.response?.data?.detail === "string"
+          ? error.response.data.detail
+          : error.message;
+      toast.error("Error creating shop: " + detail);
     },
   });
 
-  const onSubmit = (data: any) => {
-    shopMutation.mutate(data);
+  const onSubmit = (data: z.infer<typeof shopCreateSchema>) => {
+    if (!user?.id) {
+      toast.error("You need to be logged in to create a shop");
+      return;
+    }
+
+    shopMutation.mutate({
+      ...data,
+      owner_id: toOwnerId(user.id),
+    });
   };
+
+  if (!isLoaded) {
+    return <div className="px-5 text-sm text-muted-foreground">Loading...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full px-5">
@@ -76,7 +92,7 @@ export default function CreateShopPage() {
             variant="default"
             size="lg"
             className="bg-[#f87941]"
-            disabled={!isValid || shopMutation.isPending}
+            disabled={!isValid || shopMutation.isPending || !user?.id}
           >
             {shopMutation.isPending ? "Creating..." : "Create Shop"}
           </Button>

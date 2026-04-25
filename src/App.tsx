@@ -4,25 +4,31 @@ import {
   Route,
   RouterProvider,
 } from "react-router";
-import Layout from "./Layout";
-import Home from "./pages/home";
+import Layout from "./Layout.tsx";
+import Home from "./pages/home.tsx";
 import "./App.css";
-import AuthLayout from "./pages/auth/AuthLayout";
-import VerifyEmail from "./pages/auth/verify";
-import DashboardLayout from "./pages/dashboard/DashboardLayout";
-import MyShopsPage from "./pages/dashboard/shops/myShops";
-import CreateShopPage from "./pages/dashboard/shops/createShop";
-import ShopPage from "./pages/dashboard/shops/shop";
-import EditShopPage from "./pages/dashboard/shops/editShop";
-import ClerkSignup from "./pages/auth/clerkSignup";
-import ClerkSignin from "./pages/auth/clerkSignIn";
+import AuthLayout from "./pages/auth/AuthLayout.tsx";
+import VerifyEmail from "./pages/auth/verify.tsx";
+import DashboardLayout from "./pages/dashboard/DashboardLayout.tsx";
+import MyShopsPage from "./pages/dashboard/shops/myShops.tsx";
+import CreateShopPage from "./pages/dashboard/shops/createShop.tsx";
+import ShopPage from "./pages/dashboard/shops/shop.tsx";
+import EditShopPage from "./pages/dashboard/shops/editShop.tsx";
+import ClerkSignup from "./pages/auth/clerkSignup.tsx";
+import ClerkSignin from "./pages/auth/clerkSignin.tsx";
 import { Show } from "@clerk/react";
+import CreateProductPage from "./pages/dashboard/products/createProduct.tsx";
+import MyProductsPage from "./pages/dashboard/products/myProducts.tsx";
+import EditProductPage from "./pages/dashboard/products/editProduct.tsx";
+import ProductPage from "./pages/dashboard/products/product.tsx";
+import CartPage from "./pages/cart.tsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="cart" element={<CartPage />} />
       </Route>
 
       <Route path="/auth" element={<AuthLayout />}>
@@ -45,6 +51,10 @@ const router = createBrowserRouter(
         <Route path="shops/create" element={<CreateShopPage />} />
         <Route path="shops/:id" element={<ShopPage />} />
         <Route path="shops/:id/edit" element={<EditShopPage />} />
+        <Route path="products" element={<MyProductsPage />} />
+        <Route path="products/create" element={<CreateProductPage />} />
+        <Route path="products/:id" element={<ProductPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
       </Route>
     </>,
   ),

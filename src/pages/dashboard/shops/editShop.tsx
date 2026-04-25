@@ -6,11 +6,11 @@ import z from "zod";
 import { shopCreateSchema } from "@/schemas";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/providers/axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { getShopById, updateShop } from "@/lib/api";
 
 type Shop = {
   id: string;
@@ -21,6 +21,8 @@ type Shop = {
   phone: string;
 };
 
+type EditShopForm = Omit<z.infer<typeof shopCreateSchema>, "owner_id">;
+
 export default function EditShopPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,8 +30,8 @@ export default function EditShopPage() {
   const shopQuery = useQuery<Shop>({
     queryKey: ["shop", id],
     queryFn: async () => {
-      const res = await axiosInstance.get(`/shops/${id}`);
-      return res.data;
+      const res = await getShopById(id!);
+      return res.shop;
     },
     enabled: !!id,
   });
@@ -39,8 +41,8 @@ export default function EditShopPage() {
     reset,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<z.infer<typeof shopCreateSchema>>({
-    resolver: zodResolver(shopCreateSchema),
+  } = useForm<EditShopForm>({
+    resolver: zodResolver(shopCreateSchema.omit({ owner_id: true })),
     mode: "onChange",
     defaultValues: {
       name: shopQuery.data?.name || "",
@@ -61,10 +63,7 @@ export default function EditShopPage() {
   });
 
   const shopMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof shopCreateSchema>) => {
-      const res = await axiosInstance.put(`/shops/${id}`, data);
-      return res;
-    },
+    mutationFn: async (data: EditShopForm) => updateShop(id!, data),
     onSuccess: () => {
       reset();
       toast.success("Shop updated successfully!");
@@ -76,7 +75,7 @@ export default function EditShopPage() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof shopCreateSchema>) => {
+  const onSubmit = (data: EditShopForm) => {
     shopMutation.mutate(data);
   };
 

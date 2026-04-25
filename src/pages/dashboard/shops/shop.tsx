@@ -16,7 +16,6 @@ import {
   User,
 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/providers/axios";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -38,7 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Shop } from "@/types";
+import { deleteShop, getShopById, type Product, type Review, type Shop } from "@/lib/api";
 
 export default function ShopDetailPage() {
   const { id } = useParams();
@@ -47,17 +46,32 @@ export default function ShopDetailPage() {
   const shopQuery = useQuery<Shop>({
     queryKey: ["shop", id],
     queryFn: async () => {
-      const res = await axiosInstance.get(`/shops/${id}`);
-      return res.data;
+      const res = await getShopById(id!);
+      return res.shop;
+    },
+    enabled: !!id,
+  });
+
+  const shopProductsQuery = useQuery<Product[]>({
+    queryKey: ["shop-products", id],
+    queryFn: async () => {
+      const res = await getShopById(id!);
+      return res.products;
+    },
+    enabled: !!id,
+  });
+
+  const shopReviewsQuery = useQuery<Review[]>({
+    queryKey: ["shop-reviews", id],
+    queryFn: async () => {
+      const res = await getShopById(id!);
+      return res.reviews;
     },
     enabled: !!id,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const res = await axiosInstance.delete(`/shops/${id}`);
-      return res;
-    },
+    mutationFn: async () => deleteShop(id!),
     onSuccess: () => {
       toast.success("Shop deleted successfully!");
       navigate("/dashboard/shops");
@@ -68,8 +82,8 @@ export default function ShopDetailPage() {
   });
 
   const shop = shopQuery.data;
-  const products = shop?.products ?? [];
-  const reviews = shop?.reviews ?? [];
+  const products = shopProductsQuery.data ?? [];
+  const reviews = shopReviewsQuery.data ?? [];
 
   if (shopQuery.isLoading) {
     return (
@@ -203,7 +217,7 @@ export default function ShopDetailPage() {
               Created
             </h3>
             <p className="text-base text-gray-900">
-              {new Date(shop.createdAt).toLocaleDateString("en-US", {
+              {new Date(shop.created_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -244,19 +258,17 @@ export default function ShopDetailPage() {
                 ) : (
                   products.map((product) => (
                     <TableRow key={product.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium text-gray-900">{product.name}</TableCell>
+                      <TableCell className="font-medium text-gray-900">{product.product_name}</TableCell>
                       <TableCell className="text-gray-600 max-w-sm truncate">
-                        {product.description ?? "-"}
+                        {product.product_description ?? "-"}
                       </TableCell>
                       <TableCell className="text-gray-700">
-                        {typeof product.price === "number" ? `$${product.price.toFixed(2)}` : "-"}
+                        {`$${Number(product.product_price).toFixed(2)}`}
                       </TableCell>
-                      <TableCell className="text-gray-700">
-                        {product.quantity ?? product.stock ?? "-"}
-                      </TableCell>
+                      <TableCell className="text-gray-700">-</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {product.status ?? "active"}
+                          {product.product_sold ? "sold" : "active"}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -288,7 +300,7 @@ export default function ShopDetailPage() {
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 text-gray-800 font-medium">
                       <User className="w-4 h-4 text-gray-500" />
-                      {review.reviewerName ?? "Anonymous"}
+                      {review.user_id ?? "Anonymous"}
                     </div>
                     <div className="flex items-center gap-1 text-amber-500">
                       <Star className="w-4 h-4 fill-amber-400" />
@@ -303,8 +315,8 @@ export default function ShopDetailPage() {
                   </p>
 
                   <div className="mt-4 text-xs text-muted-foreground">
-                    {review.createdAt
-                      ? new Date(review.createdAt).toLocaleDateString("en-US", {
+                    {review.created_at
+                      ? new Date(review.created_at).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
