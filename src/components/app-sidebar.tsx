@@ -65,16 +65,16 @@ const data = {
     },
     {
       title: "Products",
-      url: "#",
+      url: "/dashboard/products",
       icon: Bot,
       items: [
         {
           title: "Create",
-          url: "#",
+          url: "/dashboard/products/create",
         },
         {
           title: "My Products",
-          url: "#",
+          url: "/dashboard/products",
         },
       ],
     },

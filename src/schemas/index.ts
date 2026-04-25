@@ -56,3 +56,49 @@ export const shopSchema = z.object({
   phone: z.string(),
   createdAt: z.date(),
 });
+
+export const productCreateSchema = z.object({
+  shop_id: z
+    .string()
+    .min(1, "Shop ID is required"),
+  product_name: z
+    .string()
+    .min(3, "Product name must be at least 3 characters")
+    .max(150, "Product name cannot be more than 150 characters"),
+  product_description: z
+    .string()
+    .max(500, "Product description cannot be more than 500 characters")
+    .optional(),
+  product_price: z
+    .number()
+    .positive("Product price must be a positive number"),
+  product_sold: z.boolean().default(false).optional(),
+  product_review_id: z.number().nullable().optional(),
+});
+
+export const productUpdateSchema = z.object({
+  product_name: z
+    .string()
+    .min(3, "Product name must be at least 3 characters")
+    .max(150, "Product name cannot be more than 150 characters"),
+  product_description: z
+    .string()
+    .max(500, "Product description cannot be more than 500 characters")
+    .optional(),
+  product_price: z
+    .number()
+    .positive("Product price must be a positive number"),
+  product_sold: z.boolean().default(false).optional(),
+  product_review_id: z.number().nullable().optional(),
+});
+
+export const productSchema = z.object({
+  id: z.string(),
+  shop_id: z.string(),
+  product_name: z.string(),
+  product_description: z.string().optional(),
+  product_price: z.number(),
+  product_sold: z.boolean(),
+  product_date: z.date(),
+  product_review_id: z.number().nullable().optional(),
+});
