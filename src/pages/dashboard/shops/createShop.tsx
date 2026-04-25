@@ -11,8 +11,10 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { useUser } from "@clerk/react";
 
 export default function CreateShopPage() {
+  const { user, isLoaded } = useUser()
   const navigate = useNavigate();
   const {
     register,
@@ -23,6 +25,7 @@ export default function CreateShopPage() {
     resolver: zodResolver(shopCreateSchema),
     mode: "onChange",
     defaultValues: {
+      owner_id: isLoaded ? user?.id : "",
       name: "",
       description: "",
       location: "",
