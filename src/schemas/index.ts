@@ -29,6 +29,7 @@ export const loginSchema = z.object({
 });
 
 export const shopCreateSchema = z.object({
+  owner_id: z.string(),
   name: z
     .string()
     .min(3, "Shop name must be at least 3 characters")
