@@ -19,8 +19,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import axiosInstance from "@/providers/axios";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useUser } from "@clerk/react";
 
