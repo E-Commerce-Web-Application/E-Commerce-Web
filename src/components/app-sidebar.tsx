@@ -20,7 +20,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Link } from "react-router";
-import { useClerk, useUser } from "@clerk/react";
+import { useUser } from "@clerk/react";
 
 const data = {
   user: {
@@ -64,16 +64,16 @@ const data = {
     },
     {
       title: "Products",
-      url: "/dashboard/products",
+      url: "#",
       icon: Bot,
       items: [
         {
           title: "Create",
-          url: "/dashboard/products/create",
+          url: "#",
         },
         {
           title: "My Products",
-          url: "/dashboard/products",
+          url: "#",
         },
       ],
     },
@@ -81,14 +81,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
-  const { signOut } = useClerk();
-
-  const sidebarUser = {
-    fullName: user?.fullName || user?.firstName || "User",
-    email: user?.primaryEmailAddress?.emailAddress || "",
-    avatar: user?.imageUrl || "",
-  };
+  const { isLoaded, user } = useUser();
 
   return (
     <Sidebar collapsible="offcanvas" {...props} className="bg-[#f8f6fc]">
@@ -119,12 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={sidebarUser}
-          onLogout={() => {
-            signOut({ redirectUrl: "/" });
-          }}
-        />
+        {isLoaded && user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   );
