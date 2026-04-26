@@ -22,6 +22,7 @@ import {
 import axiosInstance from "@/providers/axios";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { useUser } from "@clerk/react";
 
 const data = {
   user: {
@@ -82,16 +83,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const userQuery = useQuery({
-    queryKey: ["self"],
-    queryFn: async () => {
-      const res = await axiosInstance.get("/auth/self");
+  const { isLoaded, user } = useUser();
 
-      return res.data;
-    },
-    retryOnMount: true,
-    refetchOnReconnect: true,
-  });
   return (
     <Sidebar collapsible="offcanvas" {...props} className="bg-[#f8f6fc]">
       <SidebarHeader>
@@ -121,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userQuery.data?.user} />
+        {isLoaded && user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   );
