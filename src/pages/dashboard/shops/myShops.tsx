@@ -2,9 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { Plus, Eye, Store, FileText, MapPin, Mail, Phone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllShops, type Shop } from "@/lib/api";
-import { useUser } from "@clerk/react";
-import { matchesOwnerId } from "@/lib/owner-id";
+import axiosInstance from "@/providers/axios";
 import {
   Table,
   TableBody,
@@ -14,19 +12,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type Shop = {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  email: string;
+  phone: string;
+};
+
 export default function MyShopsPage() {
   const navigate = useNavigate();
-  const { user } = useUser();
 
   const shopsQuery = useQuery<Shop[]>({
     queryKey: ["shops"],
-    queryFn: getAllShops,
+    queryFn: async () => {
+      const res = await axiosInstance.get("/shops");
+      return res.data;
+    },
   });
 
-  const myShops = (shopsQuery.data ?? []).filter((shop) =>
-    matchesOwnerId(shop.owner_id, user?.id),
-  );
-  const hasShops = myShops.length > 0;
+  const hasShops = shopsQuery.data && shopsQuery.data.length > 0;
 
   return (
     <div className="w-full h-full px-5 py-0">
@@ -123,7 +129,7 @@ export default function MyShopsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {myShops.map((shop) => (
+                {shopsQuery.data?.map((shop) => (
                   <TableRow
                     key={shop.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
