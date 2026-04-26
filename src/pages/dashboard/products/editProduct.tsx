@@ -1,129 +1,98 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
-import { productUpdateSchema } from "@/schemas";
-import { useForm } from "react-hook-form";
+import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/providers/axios";
-import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft } from "lucide-react";
+import { useUser } from "@clerk/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
-type Product = {
-  id: string;
-  shop_id: string;
-  product_name: string;
-  product_description?: string;
-  product_price: number;
-  product_sold: boolean;
-  product_date: string;
-  product_review_id?: number | null;
-};
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { getAllShops, getProductById, updateProduct } from "@/lib/api";
+import { matchesOwnerId } from "@/lib/owner-id";
+
+const editProductSchema = z.object({
+  shop_id: z.string().min(1, "Please select a shop"),
+  product_name: z.string().min(3, "Product name should be at least 3 characters"),
+  product_description: z.string().max(400).optional(),
+  product_price: z.number().positive("Price should be greater than 0"),
+});
+
+type EditProductForm = z.infer<typeof editProductSchema>;
 
 export default function EditProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useUser();
 
-  const productQuery = useQuery<Product>({
+  const productQuery = useQuery({
     queryKey: ["product", id],
-    queryFn: async () => {
-      const res = await axiosInstance.get(`/products/${id}`);
-      return res.data;
-    },
+    queryFn: () => getProductById(id!),
     enabled: !!id,
   });
+
+  const shopsQuery = useQuery({
+    queryKey: ["shops"],
+    queryFn: getAllShops,
+  });
+
+  const myShops = useMemo(
+    () => (shopsQuery.data ?? []).filter((shop) => matchesOwnerId(shop.owner_id, user?.id)),
+    [shopsQuery.data, user?.id],
+  );
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<z.infer<typeof productUpdateSchema>>({
-    resolver: zodResolver(productUpdateSchema),
+  } = useForm<EditProductForm>({
+    resolver: zodResolver(editProductSchema),
     mode: "onChange",
     values: productQuery.data
       ? {
+          shop_id: productQuery.data.shop_id,
           product_name: productQuery.data.product_name,
           product_description: productQuery.data.product_description || "",
           product_price: productQuery.data.product_price,
-          product_sold: productQuery.data.product_sold,
-          product_review_id: productQuery.data.product_review_id || null,
         }
       : undefined,
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data) => {
-      const res = await axiosInstance.patch(`/products/${id}`, data);
-      return res;
-    },
+    mutationFn: (payload: EditProductForm) => updateProduct(id!, payload),
     onSuccess: () => {
-      toast.success("Product updated successfully!");
-      navigate("/dashboard/products");
+      toast.success("Product updated");
+      navigate(`/dashboard/products/${id}`);
     },
-    onError: (error) => {
-      toast.error("Error updating product: " + error.message);
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update product");
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: EditProductForm) => {
     updateMutation.mutate(data);
   };
-
-  if (productQuery.isLoading) {
-    return (
-      <div className="w-full h-full px-5 py-0 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading product details...</div>
-      </div>
-    );
-  }
-
-  if (!productQuery.data) {
-    return (
-      <div className="w-full h-full px-5 py-0 flex flex-col items-center justify-center gap-4">
-        <div className="text-muted-foreground">Product not found</div>
-        <Button onClick={() => navigate("/dashboard/products")} variant="outline">
-          Back to Products
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full px-5">
       <div className="w-full h-auto flex sm:flex-col lg:flex-row md:flex-row justify-between items-center">
-        <div className="w-auto flex items-center gap-3">
-          <Button
-            onClick={() => navigate("/dashboard/products")}
-            variant="ghost"
-            size="icon"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-medium text-black">Edit Product</h1>
-            <p className="text-xs text-muted-foreground">
-              Update product details below.
-            </p>
-          </div>
+        <div className="w-auto">
+          <h1 className="text-lg font-medium text-black">Edit Product</h1>
+          <p className="text-xs text-muted-foreground">Update product details below.</p>
         </div>
-        <div className="w-auto flex justify-start lg:justify-center md:justify-center items-center gap-3 lg:mt-0 md:mt-0 mt-5">
-          <Button
-            onClick={() => navigate("/dashboard/products")}
-            variant="outline"
-            size="lg"
-          >
+        <div className="w-auto flex justify-start items-center gap-3 lg:mt-0 md:mt-0 mt-5">
+          <Button onClick={() => navigate(`/dashboard/products/${id}`)} variant="outline" size="lg" type="button">
             Cancel
           </Button>
           <Button
             type="submit"
             variant="default"
             size="lg"
-            className="bg-[#f87941] hover:bg-[#e66830]"
+            className="bg-[#f87941]"
             disabled={!isValid || updateMutation.isPending}
           >
             {updateMutation.isPending ? "Updating..." : "Update Product"}
@@ -133,88 +102,58 @@ export default function EditProductPage() {
 
       <Separator className="my-5" />
 
-      <section className="w-full h-auto mt-8">
-        <div className="w-full h-auto flex justify-center items-center">
-          <Field className="w-full">
-            <FieldLabel htmlFor="input-field-productname">
-              Product Name
-            </FieldLabel>
-            <Input
-              id="input-field-productname"
-              type="text"
-              placeholder="Enter product name"
-              {...register("product_name", { required: true })}
-            />
-            {errors.product_name && (
-              <span className="text-xs text-red-500">
-                *{errors.product_name?.message}
-              </span>
-            )}
-          </Field>
-        </div>
+      <section className="w-full h-auto mt-8 space-y-5">
+        <Field className="w-full">
+          <FieldLabel htmlFor="shop_id">Shop</FieldLabel>
+          <select
+            id="shop_id"
+            className="w-full h-10 border rounded-md px-3 text-sm"
+            {...register("shop_id")}
+          >
+            <option value="">Select your shop</option>
+            {myShops.map((shop) => (
+              <option key={shop.id} value={shop.id}>
+                {shop.name}
+              </option>
+            ))}
+          </select>
+          {errors.shop_id ? <span className="text-xs text-red-500">*{errors.shop_id.message}</span> : null}
+        </Field>
 
-        <div className="w-full h-auto flex justify-center items-center mt-5">
-          <Field className="w-full">
-            <FieldLabel htmlFor="input-field-description">
-              Description (Optional)
-            </FieldLabel>
-            <Textarea
-              id="input-field-description"
-              placeholder="Provide a product description"
-              {...register("product_description")}
-              className="resize-none"
-            />
-            {errors.product_description && (
-              <span className="text-xs text-red-500">
-                *{errors.product_description?.message}
-              </span>
-            )}
-          </Field>
-        </div>
+        <Field className="w-full">
+          <FieldLabel htmlFor="product_name">Product Name</FieldLabel>
+          <Input id="product_name" placeholder="Enter product name" {...register("product_name")} />
+          {errors.product_name ? (
+            <span className="text-xs text-red-500">*{errors.product_name.message}</span>
+          ) : null}
+        </Field>
 
-        <div className="w-full h-auto flex justify-center items-center gap-5 mt-5">
-          <Field className="lg:w-1/2 md:w-1/2">
-            <FieldLabel htmlFor="input-field-price">Price</FieldLabel>
-            <Input
-              id="input-field-price"
-              type="number"
-              placeholder="Enter product price"
-              {...register("product_price", { required: true })}
-            />
-            {errors.product_price && (
-              <span className="text-xs text-red-500">
-                *{errors.product_price?.message}
-              </span>
-            )}
-          </Field>
-
-          <Field className="lg:w-1/2 md:w-1/2">
-            <FieldLabel htmlFor="input-field-reviewid">
-              Review ID (Optional)
-            </FieldLabel>
-            <Input
-              id="input-field-reviewid"
-              type="number"
-              placeholder="Enter review ID"
-              {...register("product_review_id")}
-            />
-            {errors.product_review_id && (
-              <span className="text-xs text-red-500">
-                *{errors.product_review_id?.message}
-              </span>
-            )}
-          </Field>
-        </div>
-
-        <div className="w-full h-auto flex items-center gap-3 mt-5">
-          <Checkbox
-            id="input-field-sold"
-            {...register("product_sold")}
+        <Field className="w-full">
+          <FieldLabel htmlFor="product_description">Description</FieldLabel>
+          <Textarea
+            id="product_description"
+            className="resize-none"
+            placeholder="Product description"
+            {...register("product_description")}
           />
-          <FieldLabel htmlFor="input-field-sold" className="cursor-pointer">
-            Mark as Sold
-          </FieldLabel>
-        </div>
+          {errors.product_description ? (
+            <span className="text-xs text-red-500">*{errors.product_description.message}</span>
+          ) : null}
+        </Field>
+
+        <Field className="w-full">
+          <FieldLabel htmlFor="product_price">Price</FieldLabel>
+          <Input
+            id="product_price"
+            type="number"
+            step="1"
+            min="1"
+            {...register("product_price", { valueAsNumber: true })}
+          />
+          {errors.product_price ? (
+            <span className="text-xs text-red-500">*{errors.product_price.message}</span>
+          ) : null}
+        </Field>
       </section>
     </form>
   );

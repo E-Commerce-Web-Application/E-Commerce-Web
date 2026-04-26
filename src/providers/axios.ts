@@ -3,7 +3,9 @@ import type { RetryableRequest } from "@/types";
 import axios, { AxiosError } from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER as string,
+  baseURL:
+    (import.meta.env.VITE_SHOP_SERVICE_URL as string) ||
+    (import.meta.env.VITE_SERVER as string),
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });

@@ -19,9 +19,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import axiosInstance from "@/providers/axios";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { useClerk, useUser } from "@clerk/react";
 
 const data = {
   user: {
@@ -82,16 +81,15 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const userQuery = useQuery({
-    queryKey: ["self"],
-    queryFn: async () => {
-      const res = await axiosInstance.get("/auth/self");
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
-      return res.data;
-    },
-    retryOnMount: true,
-    refetchOnReconnect: true,
-  });
+  const sidebarUser = {
+    fullName: user?.fullName || user?.firstName || "User",
+    email: user?.primaryEmailAddress?.emailAddress || "",
+    avatar: user?.imageUrl || "",
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props} className="bg-[#f8f6fc]">
       <SidebarHeader>
@@ -121,7 +119,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userQuery.data?.user} />
+        <NavUser
+          user={sidebarUser}
+          onLogout={() => {
+            signOut({ redirectUrl: "/" });
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );

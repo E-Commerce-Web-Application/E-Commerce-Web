@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { Plus, Eye, Store, FileText, MapPin, Mail, Phone } from "lucide-react";
-import { shopData } from "./shopdata";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/providers/axios";
 import {
   Table,
   TableBody,
@@ -23,19 +24,15 @@ type Shop = {
 export default function MyShopsPage() {
   const navigate = useNavigate();
 
-  // const shopsQuery = useQuery<Shop[]>({
-  //   queryKey: ["shops"],
-  //   queryFn: async () => {
-  //     const res = await axiosInstance.get("/shops");
-  //     return res.data;
-  //   },
-  // });
+  const shopsQuery = useQuery<Shop[]>({
+    queryKey: ["shops"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/shops");
+      return res.data;
+    },
+  });
 
-  const shopsData: Shop[] = shopData;
-  // const hasShops = shopsQuery.data && shopsQuery.data.length > 0;
-
-
-  const hasShops = shopsData.length > 0;
+  const hasShops = shopsQuery.data && shopsQuery.data.length > 0;
 
   return (
     <div className="w-full h-full px-5 py-0">
@@ -132,8 +129,7 @@ export default function MyShopsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* {shopsQuery.data?.map((shop) => ( */}
-                {shopsData.map((shop) => (
+                {shopsQuery.data?.map((shop) => (
                   <TableRow
                     key={shop.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -160,7 +156,6 @@ export default function MyShopsPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* ))} */}
               </TableBody>
             </Table>
           </div>
